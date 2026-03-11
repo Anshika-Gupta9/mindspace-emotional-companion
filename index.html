@@ -1,0 +1,1604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MindSpace ✨ — Your Emotional Companion</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
+<style>
+/* ============================================================
+   CSS VARIABLES & RESET
+   ============================================================ */
+:root {
+  --joy:      #FFD700; --joy-glow:     #FF9500; --joy-soft:    rgba(255,215,0,0.12);
+  --sadness:  #4A90D9; --sadness-glow: #2E6FBF; --sadness-soft:rgba(74,144,217,0.12);
+  --anger:    #FF4136; --anger-glow:   #CC1A10; --anger-soft:  rgba(255,65,54,0.12);
+  --fear:     #8B5CF6; --fear-glow:    #6D28D9; --fear-soft:   rgba(139,92,246,0.12);
+  --disgust:  #22C55E; --disgust-glow: #16A34A; --disgust-soft:rgba(34,197,94,0.12);
+  --bg:       #07071a;
+  --card:     rgba(255,255,255,0.055);
+  --card-border: rgba(255,255,255,0.1);
+  --text:     #f0f0ff;
+  --muted:    rgba(255,255,255,0.45);
+  --mood-color: rgba(255,255,255,0.3);
+  --mood-rgb:   255,255,255;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+}
+*,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family:'Nunito',sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ============================================================
+   STARFIELD & BACKGROUND
+   ============================================================ */
+#starfield {
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+  background: radial-gradient(ellipse at 15% 40%, #190833 0%, transparent 55%),
+              radial-gradient(ellipse at 85% 15%, #001838 0%, transparent 55%),
+              radial-gradient(ellipse at 50% 90%, #0a0018 0%, transparent 50%),
+              #07071a;
+}
+.star {
+  position:absolute; border-radius:50%; background:#fff;
+  animation: twinkle var(--d,3s) ease-in-out infinite var(--dl,0s);
+}
+@keyframes twinkle {
+  0%,100%{ opacity:.15; transform:scale(1); }
+  50%{ opacity:1; transform:scale(1.6); }
+}
+
+/* ============================================================
+   MOOD AMBIENT LAYERS
+   ============================================================ */
+.mood-ambient {
+  position:fixed; inset:0; z-index:1; pointer-events:none;
+  transition: all 1.2s ease;
+}
+/* Rain drops for Sadness */
+.raindrop {
+  position:fixed; width:2px; border-radius:2px;
+  background: linear-gradient(to bottom, transparent, rgba(74,144,217,0.7));
+  animation: rain var(--rd,0.8s) linear infinite var(--rdl,0s);
+  pointer-events:none; z-index:2;
+}
+@keyframes rain {
+  0%{ transform:translateY(-20px); opacity:0; }
+  10%{ opacity:1; }
+  100%{ transform:translateY(105vh); opacity:0; }
+}
+/* Sparkles for Joy */
+.sparkle {
+  position:fixed; pointer-events:none; z-index:2;
+  animation: sparkleFloat var(--sd,4s) ease-in-out infinite var(--sdl,0s);
+  font-size:var(--ss,14px);
+}
+@keyframes sparkleFloat {
+  0%{ transform:translateY(0) rotate(0deg); opacity:0; }
+  20%{ opacity:1; }
+  80%{ opacity:.8; }
+  100%{ transform:translateY(-100px) rotate(360deg); opacity:0; }
+}
+/* Embers for Anger */
+.ember {
+  position:fixed; width:5px; height:5px; border-radius:50%;
+  background: radial-gradient(circle,#FF8C00,#FF4136);
+  pointer-events:none; z-index:2;
+  animation: emberRise var(--ed,3s) ease-in infinite var(--edl,0s);
+  filter:blur(1px);
+}
+@keyframes emberRise {
+  0%{ transform:translateY(0) translateX(0) scale(1); opacity:0; }
+  10%{ opacity:1; }
+  100%{ transform:translateY(-120px) translateX(var(--ex,20px)) scale(0); opacity:0; }
+}
+/* Mist bubbles for Fear */
+.mist {
+  position:fixed; border-radius:50%; pointer-events:none; z-index:2;
+  background: radial-gradient(circle, rgba(139,92,246,0.3), transparent);
+  animation: mistDrift var(--md,8s) ease-in-out infinite var(--mdl,0s);
+}
+@keyframes mistDrift {
+  0%,100%{ transform:translate(0,0) scale(1); opacity:0; }
+  30%{ opacity:1; }
+  70%{ opacity:.6; }
+  100%{ transform:translate(var(--mx,30px),var(--my,-40px)) scale(1.5); opacity:0; }
+}
+/* Bubbles for Disgust */
+.bubble {
+  position:fixed; border-radius:50%; pointer-events:none; z-index:2;
+  border: 2px solid rgba(34,197,94,0.4);
+  animation: bubbleRise var(--bd,5s) ease-in infinite var(--bdl,0s);
+}
+@keyframes bubbleRise {
+  0%{ transform:translateY(0) scale(0); opacity:0; }
+  20%{ opacity:.7; }
+  100%{ transform:translateY(-100px) scale(1.3); opacity:0; }
+}
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+.page-wrap { position:relative; z-index:10; max-width:900px; margin:0 auto; padding:0 1.5rem; }
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+header {
+  position:relative; z-index:10; text-align:center;
+  padding:3rem 1rem 1.5rem;
+  animation: headerIn 0.8s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+@keyframes headerIn {
+  from{ opacity:0; transform:translateY(-30px); }
+  to{ opacity:1; transform:translateY(0); }
+}
+.logo {
+  font-family:'Fredoka One',cursive;
+  font-size:clamp(2.8rem,7vw,4.5rem);
+  background: linear-gradient(135deg,#FFD700 0%,#FF8C69 25%,#FF6B9D 50%,#C084FC 75%,#60A5FA 100%);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+  background-size:200%; animation:shimmer 5s linear infinite;
+  filter:drop-shadow(0 0 40px rgba(255,215,0,0.25));
+  line-height:1;
+}
+@keyframes shimmer{ 0%{background-position:0%} 100%{background-position:200%} }
+.logo-sub {
+  display:block; font-family:'Fredoka One',cursive;
+  font-size:1rem; letter-spacing:0.3em; text-transform:uppercase;
+  color:var(--muted); margin-top:0.4rem;
+  -webkit-text-fill-color: rgba(255,255,255,0.4);
+}
+.header-date {
+  margin-top:0.6rem; color:var(--muted); font-size:0.9rem; letter-spacing:1px;
+}
+
+/* ============================================================
+   MOOD SELECTOR
+   ============================================================ */
+.mood-section {
+  position:relative; z-index:10;
+  text-align:center; padding:1.5rem 1rem 0.5rem;
+}
+.section-label {
+  font-family:'Fredoka One',cursive; font-size:1.3rem;
+  color:var(--muted); margin-bottom:1.8rem; letter-spacing:1px;
+}
+.mood-buttons { display:flex; gap:1.2rem; justify-content:center; flex-wrap:wrap; }
+
+/* ---- CHARACTER BUTTON ---- */
+.char-btn {
+  display:flex; flex-direction:column; align-items:center; gap:0.6rem;
+  cursor:pointer; border:none; background:none; color:var(--text);
+  font-family:'Fredoka One',cursive; font-size:1rem;
+  transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  position:relative; padding:0.3rem;
+}
+.char-btn:hover{ transform:translateY(-10px) scale(1.08); }
+
+/* ---- 3D FACE SHELL ---- */
+.char-face {
+  width:92px; height:92px; border-radius:50%;
+  position:relative; transition:all 0.5s ease;
+  transform-style:preserve-3d;
+}
+.char-btn:hover .char-face {
+  transform:perspective(350px) rotateY(18deg) rotateX(-12deg);
+  filter:brightness(1.25) saturate(1.2);
+}
+/* Active ring */
+.char-btn.active .char-face {
+  outline:3px solid rgba(255,255,255,0.9);
+  outline-offset:5px;
+  animation:activeGlow 1.5s ease-in-out infinite alternate;
+}
+@keyframes activeGlow{
+  from{ outline-color:rgba(255,255,255,0.3); box-shadow:0 0 20px var(--fc,#fff); }
+  to{   outline-color:rgba(255,255,255,1);   box-shadow:0 0 40px var(--fc,#fff); }
+}
+
+/* JOY */
+.joy-face {
+  --fc:#FFD700;
+  background: radial-gradient(circle at 32% 30%, #FFF176, #FFD700 45%, #FF8C00 85%);
+  box-shadow: 0 10px 35px rgba(255,215,0,0.55), 0 0 70px rgba(255,180,0,0.2),
+              inset 0 -10px 25px rgba(180,80,0,0.3), inset 5px 5px 18px rgba(255,255,200,0.65);
+}
+/* SADNESS */
+.sadness-face {
+  --fc:#4A90D9;
+  background: radial-gradient(circle at 32% 30%, #93C5FD, #4A90D9 45%, #1E3A8A 85%);
+  box-shadow: 0 10px 35px rgba(74,144,217,0.55), 0 0 70px rgba(74,144,217,0.2),
+              inset 0 -10px 25px rgba(10,40,120,0.4), inset 5px 5px 18px rgba(150,200,255,0.55);
+}
+/* ANGER */
+.anger-face {
+  --fc:#FF4136;
+  background: radial-gradient(circle at 32% 30%, #FCA5A5, #FF4136 45%, #7F1D1D 85%);
+  box-shadow: 0 10px 35px rgba(255,65,54,0.6), 0 0 70px rgba(255,65,54,0.25),
+              inset 0 -10px 25px rgba(120,10,0,0.4), inset 5px 5px 18px rgba(255,180,180,0.5);
+  animation: angerPulse 1.2s ease-in-out infinite;
+}
+@keyframes angerPulse{
+  0%,100%{ box-shadow:0 10px 35px rgba(255,65,54,0.6),0 0 70px rgba(255,65,54,0.25),inset 0 -10px 25px rgba(120,10,0,0.4),inset 5px 5px 18px rgba(255,180,180,0.5); }
+  50%{ box-shadow:0 10px 50px rgba(255,65,54,0.9),0 0 100px rgba(255,65,54,0.5),inset 0 -10px 25px rgba(120,10,0,0.4),inset 5px 5px 18px rgba(255,180,180,0.5); }
+}
+/* FEAR */
+.fear-face {
+  --fc:#8B5CF6;
+  background: radial-gradient(circle at 32% 30%, #C4B5FD, #8B5CF6 45%, #3B0764 85%);
+  box-shadow: 0 10px 35px rgba(139,92,246,0.55), 0 0 70px rgba(139,92,246,0.2),
+              inset 0 -10px 25px rgba(50,10,140,0.4), inset 5px 5px 18px rgba(200,180,255,0.5);
+  animation: fearShiver 0.25s ease-in-out infinite alternate;
+}
+@keyframes fearShiver{
+  0%{ transform:translateX(-1.5px); }
+  100%{ transform:translateX(1.5px); }
+}
+.char-btn.active .fear-face { animation:fearShiver 0.2s ease-in-out infinite alternate, activeGlow 1.5s ease-in-out infinite alternate; }
+/* DISGUST */
+.disgust-face {
+  --fc:#22C55E;
+  background: radial-gradient(circle at 32% 30%, #86EFAC, #22C55E 45%, #14532D 85%);
+  box-shadow: 0 10px 35px rgba(34,197,94,0.55), 0 0 70px rgba(34,197,94,0.2),
+              inset 0 -10px 25px rgba(8,60,25,0.4), inset 5px 5px 18px rgba(150,255,180,0.5);
+}
+
+/* ---- Face features ---- */
+.fi { position:absolute; inset:0; }
+.eye {
+  position:absolute; width:15px; height:17px; border-radius:50%;
+  background:#150800; top:33%;
+}
+.eye::after{ content:''; position:absolute; width:5px; height:5px; background:#fff; border-radius:50%; top:2px; left:2px; }
+.eye.el{ left:24%; } .eye.er{ right:24%; }
+
+.sadness-face .eye{ width:19px; height:15px; border-radius:40%; background:#0c1e45; border:2.5px solid rgba(255,255,255,0.5); top:36%; }
+.anger-face .eye  { width:14px; height:11px; border-radius:30%; background:#2a0000; top:40%; }
+.fear-face .eye   { width:17px; height:19px; border-radius:50%; background:#1a0040; top:34%; }
+
+.brow{ position:absolute; height:5px; width:22px; border-radius:4px; background:#5a0000; top:27%; }
+.brow.bl{ left:19%; transform:rotate(22deg); }
+.brow.br{ right:19%; transform:rotate(-22deg); }
+
+.mouth{ position:absolute; bottom:22%; left:50%; transform:translateX(-50%); }
+.m-smile { width:38px;height:18px; border-bottom:5px solid #7a4200; border-radius:0 0 30px 30px; }
+.m-sad   { width:34px;height:16px; border-top:5px solid #0a1e60; border-radius:30px 30px 0 0; bottom:20%; }
+.m-angry { width:32px;height:14px; border-top:5px solid #4a0000; border-radius:30px 30px 0 0; }
+.m-fear  { width:28px;height:22px; border:5px solid #1e0050; border-radius:50%; }
+.m-disgust{ width:28px;height:8px; border-top:5px solid #053a18; border-radius:30px 30px 0 0; transform:translateX(-50%) rotate(12deg); }
+
+.blush{ position:absolute; width:16px;height:9px; border-radius:50%; background:rgba(255,140,100,0.3); bottom:34%; }
+.bl-l{ left:10%; } .bl-r{ right:10%; }
+
+.star-crown{ position:absolute; top:-20px; left:50%; transform:translateX(-50%); font-size:22px; filter:drop-shadow(0 0 8px #FFD700); animation:crownSpin 4s linear infinite; }
+@keyframes crownSpin{ to{ transform:translateX(-50%) rotate(360deg); } }
+.flame{ position:absolute; top:-22px; left:50%; transform:translateX(-50%); font-size:28px; filter:drop-shadow(0 0 10px #FF4136); animation:flameWave 0.3s ease-in-out infinite alternate; }
+@keyframes flameWave{ 0%{transform:translateX(-50%) scaleY(1) rotate(-4deg)} 100%{transform:translateX(-52%) scaleY(1.25) rotate(4deg)} }
+.fear-icon{ position:absolute; top:-14px; left:50%; transform:translateX(-50%); font-size:18px; filter:drop-shadow(0 0 5px #8B5CF6); animation:fearShiver 0.2s ease-in-out infinite alternate; }
+.disgust-crown{ position:absolute; top:-18px; left:50%; transform:translateX(-50%); font-size:24px; }
+
+.glasses{ position:absolute; top:31%; left:50%; transform:translateX(-50%); width:68px; height:18px; display:flex; align-items:center; gap:3px; }
+.glasses::before,.glasses::after{ content:''; width:27px; height:18px; border:2.5px solid rgba(255,255,255,0.65); border-radius:8px; flex-shrink:0; }
+.g-bridge{ width:9px; height:2px; background:rgba(255,255,255,0.65); flex-shrink:0; }
+
+/* Character label */
+.char-label {
+  font-size:0.85rem; color:var(--muted);
+  transition:color 0.3s;
+}
+.char-btn.active .char-label { color:#fff; }
+
+/* ---- Character Reaction Animations ---- */
+@keyframes joyBounce{ 0%,100%{transform:translateY(0) scale(1)} 30%{transform:translateY(-18px) scale(1.1)} 60%{transform:translateY(-8px) scale(1.05)} }
+@keyframes sadCry   { 0%,100%{transform:translateY(0)} 50%{transform:translateY(4px) scale(0.97)} }
+@keyframes angerShake{ 0%,100%{transform:rotate(0)} 20%{transform:rotate(-12deg)} 40%{transform:rotate(12deg)} 60%{transform:rotate(-8deg)} 80%{transform:rotate(8deg)} }
+@keyframes fearTremb{ 0%,100%{transform:translateX(0)} 20%{transform:translateX(-5px)} 40%{transform:translateX(5px)} 60%{transform:translateX(-3px)} 80%{transform:translateX(3px)} }
+@keyframes disgustRoll{ 0%{transform:rotateY(0deg)} 50%{transform:rotateY(180deg)} 100%{transform:rotateY(360deg)} }
+
+.reacting.joy    .char-face{ animation:joyBounce 0.7s ease both!important; }
+.reacting.sadness .char-face{ animation:sadCry 0.6s ease both!important; }
+.reacting.anger  .char-face{ animation:angerShake 0.5s ease both!important; }
+.reacting.fear   .char-face{ animation:fearTremb 0.4s ease both!important; }
+.reacting.disgust .char-face{ animation:disgustRoll 0.6s ease both!important; }
+
+/* ============================================================
+   JOURNAL CARD
+   ============================================================ */
+.journal-section{ position:relative; z-index:10; padding:2rem 0 1rem; }
+.journal-card {
+  background:var(--card); border:1px solid var(--card-border);
+  border-radius:var(--radius-xl); padding:2rem 2rem 1.5rem;
+  backdrop-filter:blur(24px);
+  position:relative; overflow:hidden;
+  transition:box-shadow 0.6s ease, border-color 0.6s ease;
+  animation:cardIn 0.8s cubic-bezier(0.34,1.56,0.64,1) 0.2s both;
+}
+@keyframes cardIn{ from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+.journal-card::before{
+  content:''; position:absolute; inset:0; border-radius:var(--radius-xl);
+  background:radial-gradient(ellipse at 20% 0%, var(--mood-color) 0%, transparent 65%);
+  opacity:0.1; pointer-events:none; transition:opacity 0.6s;
+}
+.journal-card.has-mood{ border-color:rgba(var(--mood-rgb),0.25); box-shadow:0 0 40px rgba(var(--mood-rgb),0.08); }
+
+.journal-top{
+  display:flex; justify-content:space-between; align-items:center;
+  margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;
+}
+.journal-date{ font-family:'Fredoka One',cursive; font-size:1rem; color:var(--muted); }
+.mood-badge{
+  padding:0.35rem 1.1rem; border-radius:50px;
+  font-family:'Fredoka One',cursive; font-size:0.95rem;
+  background:rgba(var(--mood-rgb),0.12); color:var(--mood-color);
+  border:1.5px solid rgba(var(--mood-rgb),0.3);
+  transition:all 0.5s ease; display:flex; align-items:center; gap:0.4rem;
+}
+.journal-prompt{
+  font-size:1rem; color:var(--muted); margin-bottom:1rem;
+  font-style:italic; min-height:1.5em; transition:all 0.4s;
+  padding-left:0.5rem; border-left:3px solid rgba(var(--mood-rgb),0.4);
+  transition:border-color 0.5s;
+}
+.journal-textarea{
+  width:100%; min-height:200px;
+  background:rgba(255,255,255,0.03); border:1.5px solid rgba(255,255,255,0.08);
+  border-radius:16px; padding:1.1rem 1.2rem;
+  color:var(--text); font-family:'Nunito',sans-serif; font-size:1.05rem; line-height:1.75;
+  resize:vertical; outline:none;
+  transition:border-color 0.3s, box-shadow 0.3s, background 0.3s;
+}
+.journal-textarea:focus{
+  border-color:rgba(var(--mood-rgb),0.45);
+  box-shadow:0 0 25px rgba(var(--mood-rgb),0.1);
+  background:rgba(255,255,255,0.05);
+}
+.journal-textarea::placeholder{ color:rgba(255,255,255,0.18); }
+
+.word-count{ font-size:0.78rem; color:rgba(255,255,255,0.25); text-align:right; margin-top:0.3rem; transition:color 0.3s; }
+
+.journal-actions{ display:flex; gap:0.8rem; margin-top:1rem; flex-wrap:wrap; align-items:center; }
+.btn-save{
+  padding:0.7rem 2rem; border-radius:50px; border:none; cursor:pointer;
+  font-family:'Fredoka One',cursive; font-size:1.05rem;
+  background:linear-gradient(135deg, var(--mood-color,#555), var(--mood-glow,#333));
+  color:#fff; transition:all 0.3s;
+  box-shadow:0 4px 20px rgba(var(--mood-rgb,100,100,100),0.4);
+  position:relative; overflow:hidden; flex-shrink:0;
+}
+.btn-save::after{ content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(255,255,255,0.2),transparent); opacity:0; transition:opacity 0.3s; }
+.btn-save:hover::after{ opacity:1; }
+.btn-save:hover{ transform:translateY(-2px) scale(1.03); }
+.btn-save:active{ transform:scale(0.96); }
+
+.btn-ghost{
+  padding:0.7rem 1.3rem; border-radius:50px;
+  background:rgba(255,255,255,0.05); border:1.5px solid rgba(255,255,255,0.1);
+  color:var(--muted); cursor:pointer;
+  font-family:'Fredoka One',cursive; font-size:0.95rem; transition:all 0.3s;
+}
+.btn-ghost:hover{ background:rgba(255,255,255,0.1); color:#fff; }
+
+.btn-cheer{
+  padding:0.7rem 1.4rem; border-radius:50px;
+  background:rgba(255,215,0,0.1); border:1.5px solid rgba(255,215,0,0.3);
+  color:#FFD700; cursor:pointer;
+  font-family:'Fredoka One',cursive; font-size:0.95rem; transition:all 0.3s;
+  display:none;
+}
+.btn-cheer:hover{ background:rgba(255,215,0,0.2); transform:translateY(-2px); }
+.btn-cheer.visible{ display:inline-flex; align-items:center; gap:0.4rem; }
+
+/* ============================================================
+   SUPPORT CARD (after negative entry)
+   ============================================================ */
+.support-overlay{
+  position:fixed; inset:0; z-index:200;
+  background:rgba(0,0,0,0.7); backdrop-filter:blur(8px);
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; pointer-events:none; transition:opacity 0.4s;
+  padding:1.5rem;
+}
+.support-overlay.open{ opacity:1; pointer-events:all; }
+
+.support-card{
+  max-width:480px; width:100%;
+  background:linear-gradient(145deg, rgba(20,15,50,0.97), rgba(10,10,35,0.97));
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:var(--radius-xl); padding:2.5rem 2rem;
+  position:relative; text-align:center;
+  transform:scale(0.85) translateY(30px);
+  transition:transform 0.5s cubic-bezier(0.34,1.56,0.64,1);
+  overflow:hidden;
+}
+.support-overlay.open .support-card{ transform:scale(1) translateY(0); }
+
+.support-card::before{
+  content:''; position:absolute; inset:0; border-radius:var(--radius-xl);
+  background:radial-gradient(circle at 50% 0%, rgba(var(--mood-rgb),0.15), transparent 60%);
+  pointer-events:none;
+}
+.support-emoji{ font-size:3.5rem; margin-bottom:1rem; display:block; animation:floatEmoji 3s ease-in-out infinite; }
+@keyframes floatEmoji{ 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+
+.support-title{
+  font-family:'Fredoka One',cursive; font-size:1.6rem; margin-bottom:0.6rem;
+  background:linear-gradient(135deg,#fff,rgba(255,255,255,0.6));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+}
+.support-quote{
+  font-size:1.05rem; color:rgba(255,255,255,0.7); line-height:1.7;
+  margin-bottom:1.5rem; font-style:italic;
+}
+.support-tips{ display:flex; flex-direction:column; gap:0.6rem; margin-bottom:1.8rem; text-align:left; }
+.support-tip{
+  display:flex; align-items:center; gap:0.7rem;
+  background:rgba(255,255,255,0.05); border-radius:12px;
+  padding:0.65rem 1rem; font-size:0.92rem; color:rgba(255,255,255,0.75);
+  border:1px solid rgba(255,255,255,0.07);
+  animation:tipIn 0.4s ease both;
+}
+@keyframes tipIn{ from{opacity:0;transform:translateX(-15px)} to{opacity:1;transform:translateX(0)} }
+.tip-icon{ font-size:1.3rem; flex-shrink:0; }
+
+.support-closing{ font-size:0.9rem; color:rgba(255,255,255,0.4); margin-bottom:1.5rem; }
+.support-actions{ display:flex; gap:0.8rem; justify-content:center; flex-wrap:wrap; }
+.btn-gratitude{
+  padding:0.75rem 1.8rem; border-radius:50px; border:none; cursor:pointer;
+  font-family:'Fredoka One',cursive; font-size:1rem;
+  background:linear-gradient(135deg,#FFD700,#FF8C00);
+  color:#1a0a00; transition:all 0.3s;
+  box-shadow:0 4px 20px rgba(255,215,0,0.35);
+}
+.btn-gratitude:hover{ transform:translateY(-2px) scale(1.03); }
+.btn-dismiss{
+  padding:0.75rem 1.5rem; border-radius:50px;
+  background:rgba(255,255,255,0.07); border:1.5px solid rgba(255,255,255,0.1);
+  color:var(--muted); cursor:pointer;
+  font-family:'Fredoka One',cursive; font-size:0.95rem; transition:all 0.3s;
+}
+.btn-dismiss:hover{ background:rgba(255,255,255,0.12); color:#fff; }
+
+/* ============================================================
+   GRATITUDE MODAL
+   ============================================================ */
+.gratitude-overlay{
+  position:fixed; inset:0; z-index:210;
+  background:rgba(0,0,0,0.75); backdrop-filter:blur(10px);
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; pointer-events:none; transition:opacity 0.4s;
+  padding:1.5rem;
+}
+.gratitude-overlay.open{ opacity:1; pointer-events:all; }
+.gratitude-card{
+  max-width:440px; width:100%;
+  background:linear-gradient(145deg,rgba(25,20,60,0.97),rgba(10,10,40,0.97));
+  border:1px solid rgba(255,215,0,0.25); border-radius:var(--radius-xl);
+  padding:2.5rem 2rem; text-align:center;
+  transform:scale(0.9); transition:transform 0.5s cubic-bezier(0.34,1.56,0.64,1);
+  overflow:hidden; position:relative;
+}
+.gratitude-overlay.open .gratitude-card{ transform:scale(1); }
+.gratitude-card::before{
+  content:''; position:absolute; inset:0; border-radius:var(--radius-xl);
+  background:radial-gradient(circle at 50% 0%,rgba(255,215,0,0.1),transparent 60%);
+  pointer-events:none;
+}
+.gratitude-title{
+  font-family:'Fredoka One',cursive; font-size:1.5rem; margin-bottom:0.4rem; color:#FFD700;
+}
+.gratitude-sub{ font-size:0.95rem; color:var(--muted); margin-bottom:1.3rem; }
+.gratitude-textarea{
+  width:100%; min-height:120px;
+  background:rgba(255,215,0,0.05); border:1.5px solid rgba(255,215,0,0.25);
+  border-radius:14px; padding:1rem; color:var(--text);
+  font-family:'Nunito',sans-serif; font-size:1rem; line-height:1.6;
+  resize:none; outline:none; transition:border-color 0.3s,box-shadow 0.3s;
+}
+.gratitude-textarea:focus{ border-color:rgba(255,215,0,0.5); box-shadow:0 0 20px rgba(255,215,0,0.1); }
+.gratitude-textarea::placeholder{ color:rgba(255,215,0,0.3); }
+.gratitude-actions{ display:flex; gap:0.8rem; justify-content:center; margin-top:1rem; flex-wrap:wrap; }
+
+/* ============================================================
+   CHEER UP PANEL
+   ============================================================ */
+.cheer-overlay{
+  position:fixed; inset:0; z-index:200;
+  background:rgba(0,0,0,0.7); backdrop-filter:blur(8px);
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; pointer-events:none; transition:opacity 0.4s;
+  padding:1.5rem;
+}
+.cheer-overlay.open{ opacity:1; pointer-events:all; }
+.cheer-card{
+  max-width:480px; width:100%;
+  background:linear-gradient(145deg,rgba(20,18,50,0.97),rgba(8,8,30,0.97));
+  border:1px solid rgba(255,215,0,0.2); border-radius:var(--radius-xl);
+  padding:2.5rem 2rem; text-align:center;
+  transform:scale(0.88) translateY(20px);
+  transition:transform 0.5s cubic-bezier(0.34,1.56,0.64,1);
+  position:relative; overflow:hidden;
+}
+.cheer-overlay.open .cheer-card{ transform:scale(1) translateY(0); }
+.cheer-card::before{
+  content:''; position:absolute; inset:0; border-radius:var(--radius-xl);
+  background:radial-gradient(circle at 50% 0%,rgba(255,215,0,0.12),transparent 55%);
+  pointer-events:none;
+}
+.cheer-title{ font-family:'Fredoka One',cursive; font-size:1.7rem; margin-bottom:0.4rem; color:#FFD700; }
+.cheer-sub{ color:var(--muted); font-size:0.95rem; margin-bottom:1.5rem; }
+
+.cheer-grid{ display:grid; grid-template-columns:1fr 1fr; gap:0.8rem; margin-bottom:1.5rem; }
+.cheer-item{
+  background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08);
+  border-radius:16px; padding:1.1rem 0.8rem; cursor:pointer;
+  transition:all 0.3s; text-align:center;
+  display:flex; flex-direction:column; align-items:center; gap:0.4rem;
+}
+.cheer-item:hover{ background:rgba(255,255,255,0.1); transform:scale(1.04); border-color:rgba(255,215,0,0.3); }
+.cheer-item:active{ transform:scale(0.97); }
+.cheer-icon{ font-size:2rem; }
+.cheer-label{ font-family:'Fredoka One',cursive; font-size:0.85rem; color:rgba(255,255,255,0.8); }
+.cheer-desc{ font-size:0.72rem; color:var(--muted); }
+
+/* Breathing Exercise */
+.breathing-modal{
+  position:fixed; inset:0; z-index:220;
+  background:rgba(0,0,0,0.85); backdrop-filter:blur(12px);
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; pointer-events:none; transition:opacity 0.4s;
+}
+.breathing-modal.open{ opacity:1; pointer-events:all; }
+.breathing-card{
+  text-align:center; padding:3rem 2rem;
+  transform:scale(0.9); transition:transform 0.4s ease;
+}
+.breathing-modal.open .breathing-card{ transform:scale(1); }
+.breath-circle{
+  width:180px; height:180px; border-radius:50%;
+  background:radial-gradient(circle,rgba(139,92,246,0.4),rgba(74,144,217,0.2));
+  border:3px solid rgba(139,92,246,0.6);
+  margin:1.5rem auto; display:flex; align-items:center; justify-content:center;
+  font-family:'Fredoka One',cursive; font-size:1.3rem; color:#fff;
+  animation:breathe 8s ease-in-out infinite;
+  box-shadow:0 0 60px rgba(139,92,246,0.3);
+}
+@keyframes breathe{
+  0%,100%{ transform:scale(0.85); box-shadow:0 0 30px rgba(139,92,246,0.2); }
+  50%{ transform:scale(1.2); box-shadow:0 0 80px rgba(139,92,246,0.5); }
+}
+.breath-instruction{ font-family:'Fredoka One',cursive; font-size:1.5rem; color:#C4B5FD; margin-bottom:0.4rem; }
+.breath-tip{ color:var(--muted); font-size:0.9rem; margin-bottom:1.5rem; }
+
+/* ============================================================
+   MOOD TIMELINE
+   ============================================================ */
+.timeline-section{ position:relative; z-index:10; padding:1.5rem 0; }
+.section-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:1.2rem; }
+.section-title{ font-family:'Fredoka One',cursive; font-size:1.5rem; color:rgba(255,255,255,0.85); }
+
+.timeline-card{
+  background:var(--card); border:1px solid var(--card-border);
+  border-radius:var(--radius-lg); padding:1.5rem;
+  backdrop-filter:blur(20px); overflow:hidden;
+}
+.timeline-track{
+  display:flex; gap:0; min-height:60px; align-items:stretch;
+  border-radius:12px; overflow:hidden; margin-bottom:1rem;
+}
+.timeline-seg{
+  flex:var(--flex,1); display:flex; align-items:center; justify-content:center;
+  font-size:1.2rem; position:relative; cursor:pointer;
+  transition:flex 0.5s ease, filter 0.3s;
+  min-width:24px;
+}
+.timeline-seg:hover{ flex:calc(var(--flex,1)*1.5); filter:brightness(1.3); }
+.timeline-seg::after{
+  content:attr(data-tooltip); position:absolute; bottom:calc(100%+8px);
+  background:rgba(10,10,30,0.95); border:1px solid rgba(255,255,255,0.1);
+  border-radius:8px; padding:0.3rem 0.6rem; font-size:0.75rem;
+  white-space:nowrap; color:#fff; opacity:0; pointer-events:none;
+  transition:opacity 0.2s; font-family:'Nunito',sans-serif;
+}
+.timeline-seg:hover::after{ opacity:1; }
+
+.timeline-legend{ display:flex; gap:1rem; flex-wrap:wrap; }
+.legend-item{ display:flex; align-items:center; gap:0.4rem; font-size:0.82rem; color:var(--muted); }
+.legend-dot{ width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+
+.mood-calendar{ display:grid; grid-template-columns:repeat(auto-fill,minmax(32px,1fr)); gap:4px; margin-top:1rem; }
+.cal-day{
+  width:32px; height:32px; border-radius:8px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:0.9rem; cursor:default; transition:transform 0.2s;
+  border:1px solid rgba(255,255,255,0.05);
+}
+.cal-day:hover{ transform:scale(1.2); }
+.cal-day.empty{ background:rgba(255,255,255,0.03); }
+
+/* ============================================================
+   STATS CHIPS
+   ============================================================ */
+.stats-row{
+  display:flex; gap:0.5rem; flex-wrap:wrap;
+  margin-bottom:1.2rem;
+}
+.stat-chip{
+  padding:0.3rem 0.9rem; border-radius:30px;
+  font-size:0.8rem; font-family:'Fredoka One',cursive;
+  background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08);
+  color:var(--muted); transition:all 0.3s;
+}
+.stat-chip.mood-chip{ color:var(--sc); border-color:rgba(var(--scr),0.3); background:rgba(var(--scr),0.08); }
+
+/* ============================================================
+   ENTRIES
+   ============================================================ */
+.entries-section{ position:relative; z-index:10; padding:0 0 5rem; }
+.entries-list{ display:flex; flex-direction:column; gap:0.9rem; }
+
+.entry-card{
+  background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07);
+  border-radius:18px; padding:1.1rem 1.4rem;
+  display:flex; gap:1rem; align-items:flex-start;
+  transition:all 0.3s; cursor:default;
+  animation:slideIn 0.4s ease both;
+  position:relative; overflow:hidden;
+}
+@keyframes slideIn{ from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+.entry-card::before{ content:''; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--ec,#fff); border-radius:4px 0 0 4px; }
+.entry-card:hover{ background:rgba(255,255,255,0.07); transform:translateX(5px); }
+
+.entry-emoji{ font-size:1.8rem; flex-shrink:0; line-height:1; margin-top:2px; }
+.entry-body{ flex:1; min-width:0; }
+.entry-meta{ display:flex; gap:0.6rem; align-items:center; margin-bottom:0.3rem; flex-wrap:wrap; }
+.entry-time{ font-size:0.75rem; color:rgba(255,255,255,0.3); }
+.entry-mood-tag{
+  font-size:0.72rem; font-family:'Fredoka One',cursive;
+  padding:0.1rem 0.6rem; border-radius:30px;
+  background:rgba(var(--er),0.12); color:var(--ec);
+}
+.entry-text{ color:rgba(255,255,255,0.6); font-size:0.92rem; line-height:1.55; word-break:break-word; }
+.entry-delete{ background:none; border:none; cursor:pointer; color:rgba(255,255,255,0.18); font-size:1rem; transition:color 0.2s; flex-shrink:0; padding:2px 4px; margin-top:2px; }
+.entry-delete:hover{ color:#FF4136; }
+
+/* Gratitude entries special */
+.entry-card.gratitude-entry{ background:rgba(255,215,0,0.04); border-color:rgba(255,215,0,0.12); }
+.entry-card.gratitude-entry::before{ background:#FFD700; }
+
+.empty-state{ text-align:center; padding:3rem; color:rgba(255,255,255,0.2); font-family:'Fredoka One',cursive; font-size:1.1rem; }
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+.toast{
+  position:fixed; bottom:2rem; left:50%;
+  transform:translateX(-50%) translateY(120px);
+  background:rgba(15,15,40,0.96); border:1px solid rgba(255,255,255,0.12);
+  border-radius:50px; padding:0.8rem 2rem;
+  font-family:'Fredoka One',cursive; font-size:1rem; color:#fff;
+  backdrop-filter:blur(20px); z-index:300;
+  transition:transform 0.45s cubic-bezier(0.34,1.56,0.64,1);
+  white-space:nowrap;
+}
+.toast.show{ transform:translateX(-50%) translateY(0); }
+
+/* ============================================================
+   UTILITY
+   ============================================================ */
+.hidden{ display:none!important; }
+.visually-hidden{ position:absolute; opacity:0; pointer-events:none; }
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     BACKGROUND LAYERS
+     ============================================================ -->
+<div id="starfield"></div>
+<div id="ambientLayer" class="mood-ambient" aria-hidden="true"></div>
+
+<!-- ============================================================
+     HEADER
+     ============================================================ -->
+<header>
+  <div class="logo">✨ MindSpace <span class="logo-sub">Your Emotional Companion</span></div>
+  <p class="header-date" id="headerDate"></p>
+</header>
+
+<!-- ============================================================
+     MOOD SELECTOR
+     ============================================================ -->
+<section class="mood-section" aria-label="Select your mood">
+  <p class="section-label">💭 How are you feeling right now?</p>
+  <div class="mood-buttons" role="group" aria-label="Mood selection">
+
+    <!-- JOY -->
+    <button class="char-btn" data-mood="joy" onclick="selectMood(this)" aria-label="Joy">
+      <div class="char-face joy-face">
+        <span class="star-crown" aria-hidden="true">⭐</span>
+        <div class="fi">
+          <div class="eye el"></div><div class="eye er"></div>
+          <div class="blush bl-l"></div><div class="blush bl-r"></div>
+          <div class="mouth m-smile"></div>
+        </div>
+      </div>
+      <span class="char-label">Joy</span>
+    </button>
+
+    <!-- SADNESS -->
+    <button class="char-btn" data-mood="sadness" onclick="selectMood(this)" aria-label="Sadness">
+      <div class="char-face sadness-face">
+        <div class="fi">
+          <div class="eye el" style="top:36%"></div><div class="eye er" style="top:36%"></div>
+          <div class="glasses"><div class="g-bridge"></div></div>
+          <div class="mouth m-sad"></div>
+        </div>
+      </div>
+      <span class="char-label">Sadness</span>
+    </button>
+
+    <!-- ANGER -->
+    <button class="char-btn" data-mood="anger" onclick="selectMood(this)" aria-label="Anger">
+      <div class="char-face anger-face">
+        <span class="flame" aria-hidden="true">🔥</span>
+        <div class="fi">
+          <div class="brow bl"></div><div class="brow br"></div>
+          <div class="eye el" style="top:40%"></div><div class="eye er" style="top:40%"></div>
+          <div class="mouth m-angry"></div>
+        </div>
+      </div>
+      <span class="char-label">Anger</span>
+    </button>
+
+    <!-- FEAR -->
+    <button class="char-btn" data-mood="fear" onclick="selectMood(this)" aria-label="Fear">
+      <div class="char-face fear-face">
+        <span class="fear-icon" aria-hidden="true">😬</span>
+        <div class="fi">
+          <div class="eye el" style="width:18px;height:20px;border-radius:50%;top:35%"></div>
+          <div class="eye er" style="width:18px;height:20px;border-radius:50%;top:35%"></div>
+          <div class="mouth m-fear" style="bottom:18%"></div>
+        </div>
+      </div>
+      <span class="char-label">Fear</span>
+    </button>
+
+    <!-- DISGUST -->
+    <button class="char-btn" data-mood="disgust" onclick="selectMood(this)" aria-label="Disgust">
+      <div class="char-face disgust-face">
+        <span class="disgust-crown" aria-hidden="true">💚</span>
+        <div class="fi">
+          <div class="eye el" style="top:37%"></div><div class="eye er" style="top:37%"></div>
+          <div class="mouth m-disgust"></div>
+        </div>
+      </div>
+      <span class="char-label">Disgust</span>
+    </button>
+
+  </div>
+</section>
+
+<!-- ============================================================
+     JOURNAL CARD
+     ============================================================ -->
+<div class="page-wrap">
+  <section class="journal-section" aria-label="Journal entry">
+    <div class="journal-card" id="journalCard">
+      <div class="journal-top">
+        <div class="journal-date" id="journalDate"></div>
+        <div class="mood-badge" id="moodBadge">🌟 Pick a mood to begin</div>
+      </div>
+      <p class="journal-prompt" id="journalPrompt">Choose a character above, then let your heart speak…</p>
+      <textarea
+        class="journal-textarea"
+        id="journalText"
+        placeholder="Every feeling deserves a voice. Start writing here… 💭"
+        aria-label="Journal entry text"
+      ></textarea>
+      <div class="word-count" id="wordCount">0 words</div>
+      <div class="journal-actions">
+        <button class="btn-save" id="saveBtn" onclick="saveEntry()">💾 Save Entry</button>
+        <button class="btn-ghost" onclick="clearEntry()">Clear</button>
+        <button class="btn-cheer" id="cheerBtn" onclick="openCheer()">🌈 Cheer Me Up!</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats Row -->
+  <div class="stats-row" id="statsRow"></div>
+
+  <!-- ============================================================
+       MOOD TIMELINE
+       ============================================================ -->
+  <section class="timeline-section" id="timelineSection" style="display:none">
+    <div class="section-header">
+      <h2 class="section-title">📊 Mood Timeline</h2>
+    </div>
+    <div class="timeline-card">
+      <div class="timeline-track" id="timelineTrack"></div>
+      <div class="timeline-legend" id="timelineLegend"></div>
+      <div class="mood-calendar" id="moodCalendar"></div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       GRATITUDE LOG
+       ============================================================ -->
+  <section class="entries-section" id="gratitudeSection" style="display:none">
+    <div class="section-header" style="margin-top:1.5rem">
+      <h2 class="section-title">🌻 Gratitude Sparks</h2>
+    </div>
+    <div class="entries-list" id="gratitudeList"></div>
+  </section>
+
+  <!-- ============================================================
+       JOURNAL ENTRIES
+       ============================================================ -->
+  <section class="entries-section" id="entriesSection" style="display:none">
+    <div class="section-header" style="margin-top:1.5rem">
+      <h2 class="section-title">📖 Journal Entries</h2>
+    </div>
+    <div class="entries-list" id="entriesList"></div>
+  </section>
+</div>
+
+<!-- ============================================================
+     SUPPORT OVERLAY (shown after negative entry)
+     ============================================================ -->
+<div class="support-overlay" id="supportOverlay" role="dialog" aria-modal="true" aria-label="Emotional support">
+  <div class="support-card" id="supportCard">
+    <span class="support-emoji" id="supportEmoji">💙</span>
+    <h2 class="support-title" id="supportTitle">You're Not Alone</h2>
+    <p class="support-quote" id="supportQuote"></p>
+    <div class="support-tips" id="supportTips"></div>
+    <p class="support-closing">Writing your feelings down is a brave and powerful step. 💙</p>
+    <div class="support-actions">
+      <button class="btn-gratitude" onclick="openGratitude()">🌻 Add a Gratitude Spark</button>
+      <button class="btn-dismiss" onclick="closeSupportCard()">I'm okay, thanks</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     GRATITUDE MODAL
+     ============================================================ -->
+<div class="gratitude-overlay" id="gratitudeOverlay" role="dialog" aria-modal="true" aria-label="Gratitude entry">
+  <div class="gratitude-card">
+    <div style="font-size:2.5rem;margin-bottom:0.6rem">🌻</div>
+    <h2 class="gratitude-title">One Small Spark ✨</h2>
+    <p class="gratitude-sub">Before you go — can you name one tiny thing you're grateful for today? It can be anything. Even the smallest light matters.</p>
+    <textarea class="gratitude-textarea" id="gratitudeText" placeholder="Today I'm grateful for… 🌟" rows="4"></textarea>
+    <div class="gratitude-actions">
+      <button class="btn-gratitude" onclick="saveGratitude()">✨ Save this Spark</button>
+      <button class="btn-dismiss" onclick="closeGratitude()">Maybe later</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     CHEER UP PANEL
+     ============================================================ -->
+<div class="cheer-overlay" id="cheerOverlay" role="dialog" aria-modal="true" aria-label="Cheer up panel">
+  <div class="cheer-card">
+    <div style="font-size:2.5rem;margin-bottom:0.5rem">🌈</div>
+    <h2 class="cheer-title">Let's turn that frown!</h2>
+    <p class="cheer-sub">Pick something small and kind to do for yourself right now 💛</p>
+    <div class="cheer-grid">
+      <div class="cheer-item" onclick="startBreathing()">
+        <div class="cheer-icon">🫁</div>
+        <div class="cheer-label">Breathing Break</div>
+        <div class="cheer-desc">30-second calm exercise</div>
+      </div>
+      <div class="cheer-item" onclick="showGratitudeQuick()">
+        <div class="cheer-icon">🌻</div>
+        <div class="cheer-label">Gratitude Moment</div>
+        <div class="cheer-desc">Find one good thing</div>
+      </div>
+      <div class="cheer-item" onclick="playCalm()">
+        <div class="cheer-icon">🎵</div>
+        <div class="cheer-label">Calming Music</div>
+        <div class="cheer-desc">Open YouTube ambient</div>
+      </div>
+      <div class="cheer-item" onclick="selfCareReminder('walk')">
+        <div class="cheer-icon">🚶</div>
+        <div class="cheer-label">Take a Walk</div>
+        <div class="cheer-desc">Even 5 minutes outside helps</div>
+      </div>
+      <div class="cheer-item" onclick="selfCareReminder('water')">
+        <div class="cheer-icon">💧</div>
+        <div class="cheer-label">Drink Water</div>
+        <div class="cheer-desc">Hydration = mood booster</div>
+      </div>
+      <div class="cheer-item" onclick="selfCareReminder('stretch')">
+        <div class="cheer-icon">🧘</div>
+        <div class="cheer-label">Stretch It Out</div>
+        <div class="cheer-desc">Release tension gently</div>
+      </div>
+    </div>
+    <button class="btn-dismiss" onclick="closeCheer()">Close Panel</button>
+  </div>
+</div>
+
+<!-- ============================================================
+     BREATHING MODAL
+     ============================================================ -->
+<div class="breathing-modal" id="breathingModal" role="dialog" aria-modal="true" aria-label="Breathing exercise">
+  <div class="breathing-card">
+    <p class="breath-instruction" id="breathInstruction">Breathe In…</p>
+    <p class="breath-tip">Follow the circle · Inhale 4s → Hold 4s → Exhale 4s</p>
+    <div class="breath-circle" id="breathCircle">Breathe</div>
+    <button class="btn-dismiss" onclick="stopBreathing()" style="margin-top:1rem">Done ✓</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- ============================================================
+     JAVASCRIPT — ALL MODULES
+     ============================================================ -->
+<script>
+'use strict';
+
+/* ============================================================
+   MODULE: MOOD CONFIG
+   ============================================================ */
+const MOODS = {
+  joy: {
+    emoji:'😄', label:'Joy', color:'#FFD700', glow:'#FF9500',
+    rgb:'255,215,0', soft:'rgba(255,215,0,0.12)',
+    negative: false,
+    prompts:[
+      "What made your heart soar today? ✨",
+      "Describe a moment that made you smile ear to ear!",
+      "What's one thing you're incredibly grateful for right now? 🌟",
+      "Tell me about the best part of your day, no matter how small!"
+    ]
+  },
+  sadness: {
+    emoji:'😢', label:'Sadness', color:'#4A90D9', glow:'#2E6FBF',
+    rgb:'74,144,217', soft:'rgba(74,144,217,0.12)',
+    negative: true,
+    supportEmoji:'💙', supportTitle:"It's Okay to Feel Blue",
+    supportQuotes:[
+      "Every storm runs out of rain. Every night ends at dawn. You're allowed to feel this way. 🌧️",
+      "Tears are how your heart speaks when your lips can't find the words.",
+      "It's okay to not be okay. Being honest about how you feel is a kind of courage.",
+      "Even the saddest seasons teach us something beautiful about ourselves. 💙"
+    ],
+    tips:[
+      { icon:'🫂', text:'Reach out to someone you trust — even a short message helps.' },
+      { icon:'🎵', text:'Put on a song that makes you feel understood.' },
+      { icon:'🛏️', text:'Rest is healing. It\'s okay to take it slow today.' },
+      { icon:'💧', text:'Drink a glass of water and take three slow breaths.' }
+    ],
+    ambientFn: 'spawnRain',
+    prompts:[
+      "It's okay to feel sad. What's weighing on your heart today? 💙",
+      "What do you wish was different right now?",
+      "Sometimes we just need to let it out. What's making you feel blue? 🌧️",
+      "Write about something you miss, or something you're working through."
+    ]
+  },
+  anger: {
+    emoji:'😡', label:'Anger', color:'#FF4136', glow:'#CC1A10',
+    rgb:'255,65,54', soft:'rgba(255,65,54,0.12)',
+    negative: true,
+    supportEmoji:'🔥', supportTitle:"That Flame Deserves Space",
+    supportQuotes:[
+      "Your anger is valid. It means something matters to you deeply. Breathe, then decide.",
+      "Feeling angry is human. What you do with it is the superpower. 💪",
+      "The fire in you doesn't have to burn you — let this page hold the heat.",
+      "Anger unexpressed is pressure. You did the right thing by writing it out. 🔥"
+    ],
+    tips:[
+      { icon:'🫁', text:'Try 4-7-8 breathing: in for 4, hold for 7, out for 8.' },
+      { icon:'🚶', text:'Step outside for 5 minutes. Movement releases tension.' },
+      { icon:'✍️', text:'Write exactly what you\'d say if there were no consequences.' },
+      { icon:'🧊', text:'Hold something cold or splash cold water on your face.' }
+    ],
+    ambientFn: 'spawnEmbers',
+    prompts:[
+      "VENT IT OUT! What's got you fired up today? 🔥",
+      "What situation made everything feel totally unfair?",
+      "Who or what is testing your patience right now? Let it all out!",
+      "What boundary was crossed? Write about it — you're safe here. ⚡"
+    ]
+  },
+  fear: {
+    emoji:'😰', label:'Fear', color:'#8B5CF6', glow:'#6D28D9',
+    rgb:'139,92,246', soft:'rgba(139,92,246,0.12)',
+    negative: true,
+    supportEmoji:'🌙', supportTitle:"You Are Braver Than You Know",
+    supportQuotes:[
+      "Courage isn't the absence of fear. It's feeling afraid and showing up anyway. 💜",
+      "Your worries are real, but they don't write the ending. You do.",
+      "One breath at a time. One moment at a time. That's all you need. 🌙",
+      "Naming your fear is the first step to shrinking it. You're already doing so well."
+    ],
+    tips:[
+      { icon:'🌬️', text:'Box breathing: inhale 4s, hold 4s, exhale 4s, hold 4s. Repeat.' },
+      { icon:'🌱', text:'Name 5 things you can see right now — ground yourself in this moment.' },
+      { icon:'📞', text:'Talk to someone about what\'s worrying you. Fears shrink when shared.' },
+      { icon:'📝', text:'Write: "What\'s the worst that could realistically happen?" Then plan.' }
+    ],
+    ambientFn: 'spawnMist',
+    prompts:[
+      "What's been creeping into your thoughts lately? 🌙",
+      "What's one thing you're nervous or anxious about right now?",
+      "Write about your worries — giving them words can make them smaller. 💜",
+      "What 'what-ifs' are swirling in your mind? Let them out here."
+    ]
+  },
+  disgust: {
+    emoji:'🤢', label:'Disgust', color:'#22C55E', glow:'#16A34A',
+    rgb:'34,197,94', soft:'rgba(34,197,94,0.12)',
+    negative: true,
+    supportEmoji:'🌿', supportTitle:"Your Standards Matter",
+    supportQuotes:[
+      "Disgust is your values speaking. What's bothering you is telling you something important.",
+      "Feeling repelled by something wrong shows you have a moral compass. Trust it. 🌿",
+      "It's okay to walk away from what doesn't serve you or align with who you are.",
+      "Your discomfort is a signal, not a flaw. Listen to it with curiosity. 💚"
+    ],
+    tips:[
+      { icon:'🧹', text:'Clean or tidy one small area — physical order can calm mental chaos.' },
+      { icon:'🌿', text:'Step into nature or open a window. Fresh air resets the mind.' },
+      { icon:'📏', text:'Set one clear boundary around what\'s bothering you today.' },
+      { icon:'🎯', text:'Redirect your energy — channel it into something you care about.' }
+    ],
+    ambientFn: 'spawnBubbles',
+    prompts:[
+      "Ugh! What's been really bothering you today? 🙄",
+      "What situation felt completely wrong or off to you?",
+      "Write about something that clashes with your values.",
+      "What do you really, REALLY not like right now? Be honest! 💚"
+    ]
+  }
+};
+
+/* ============================================================
+   MODULE: STATE
+   ============================================================ */
+const state = {
+  currentMood: null,
+  entries: JSON.parse(localStorage.getItem('ms-entries') || '[]'),
+  gratitudes: JSON.parse(localStorage.getItem('ms-gratitudes') || '[]'),
+  breathingInterval: null,
+  breathPhase: 0
+};
+
+/* ============================================================
+   MODULE: INIT
+   ============================================================ */
+function init() {
+  // Set date
+  const now = new Date();
+  const opts = { weekday:'long', year:'numeric', month:'long', day:'numeric' };
+  const dateStr = now.toLocaleDateString('en-US', opts);
+  document.getElementById('headerDate').textContent = dateStr;
+  document.getElementById('journalDate').textContent = dateStr;
+
+  // Build starfield
+  buildStarfield();
+
+  // Word count listener
+  document.getElementById('journalText').addEventListener('input', updateWordCount);
+
+  // Render existing data
+  renderAll();
+}
+
+/* ============================================================
+   MODULE: STARFIELD
+   ============================================================ */
+function buildStarfield() {
+  const sf = document.getElementById('starfield');
+  const frag = document.createDocumentFragment();
+  for (let i = 0; i < 130; i++) {
+    const el = document.createElement('div');
+    el.className = 'star';
+    const sz = Math.random() * 2.5 + 0.5;
+    el.style.cssText = `width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--d:${2+Math.random()*4}s;--dl:${Math.random()*5}s`;
+    frag.appendChild(el);
+  }
+  sf.appendChild(frag);
+}
+
+/* ============================================================
+   MODULE: MOOD SELECTION
+   ============================================================ */
+function selectMood(btn) {
+  // Deactivate all
+  document.querySelectorAll('.char-btn').forEach(b => b.classList.remove('active','reacting'));
+  btn.classList.add('active');
+
+  const mood = btn.dataset.mood;
+  state.currentMood = mood;
+  const m = MOODS[mood];
+
+  // Body class for CSS vars
+  document.body.className = 'mood-' + mood;
+
+  // Update CSS vars
+  document.documentElement.style.setProperty('--mood-color', m.color);
+  document.documentElement.style.setProperty('--mood-rgb', m.rgb);
+
+  // Update badge
+  const badge = document.getElementById('moodBadge');
+  badge.textContent = m.emoji + ' Feeling ' + m.label;
+  badge.style.cssText = `--badge-bg:${m.soft};color:${m.color};background:${m.soft};border-color:${m.color}55`;
+
+  // Prompt
+  const prompts = m.prompts;
+  document.getElementById('journalPrompt').textContent = prompts[Math.floor(Math.random() * prompts.length)];
+  document.getElementById('journalPrompt').style.borderLeftColor = m.color + '80';
+
+  // Save button
+  const sb = document.getElementById('saveBtn');
+  sb.style.background = `linear-gradient(135deg, ${m.color}, ${m.glow})`;
+  sb.style.boxShadow = `0 4px 20px rgba(${m.rgb},0.4)`;
+
+  // Journal card
+  document.getElementById('journalCard').classList.add('has-mood');
+
+  // Cheer button visibility
+  const cheerBtn = document.getElementById('cheerBtn');
+  if (m.negative) cheerBtn.classList.add('visible');
+  else cheerBtn.classList.remove('visible');
+
+  // Ambient effects
+  clearAmbient();
+  if (m.ambientFn) window[m.ambientFn]();
+
+  // Focus textarea
+  setTimeout(() => document.getElementById('journalText').focus(), 200);
+}
+
+/* ============================================================
+   MODULE: AMBIENT EFFECTS
+   ============================================================ */
+function clearAmbient() {
+  const layer = document.getElementById('ambientLayer');
+  layer.innerHTML = '';
+}
+
+function spawnRain() {
+  const layer = document.getElementById('ambientLayer');
+  for (let i = 0; i < 35; i++) {
+    const el = document.createElement('div');
+    el.className = 'raindrop';
+    const h = 10 + Math.random() * 20;
+    el.style.cssText = `height:${h}px;left:${Math.random()*100}%;top:0;--rd:${0.5+Math.random()*0.8}s;--rdl:${Math.random()*2}s`;
+    layer.appendChild(el);
+  }
+}
+
+function spawnEmbers() {
+  const layer = document.getElementById('ambientLayer');
+  for (let i = 0; i < 25; i++) {
+    const el = document.createElement('div');
+    el.className = 'ember';
+    const x = (Math.random() - 0.5) * 80;
+    el.style.cssText = `left:${20+Math.random()*60}%;bottom:0;--ed:${2+Math.random()*3}s;--edl:${Math.random()*2}s;--ex:${x}px`;
+    layer.appendChild(el);
+  }
+}
+
+function spawnMist() {
+  const layer = document.getElementById('ambientLayer');
+  for (let i = 0; i < 15; i++) {
+    const el = document.createElement('div');
+    el.className = 'mist';
+    const sz = 80 + Math.random() * 150;
+    const mx = (Math.random() - 0.5) * 80;
+    const my = -(20 + Math.random() * 60);
+    el.style.cssText = `width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--md:${6+Math.random()*6}s;--mdl:${Math.random()*4}s;--mx:${mx}px;--my:${my}px`;
+    layer.appendChild(el);
+  }
+}
+
+function spawnBubbles() {
+  const layer = document.getElementById('ambientLayer');
+  for (let i = 0; i < 20; i++) {
+    const el = document.createElement('div');
+    el.className = 'bubble';
+    const sz = 15 + Math.random() * 40;
+    el.style.cssText = `width:${sz}px;height:${sz}px;left:${10+Math.random()*80}%;bottom:0;--bd:${3+Math.random()*4}s;--bdl:${Math.random()*3}s`;
+    layer.appendChild(el);
+  }
+}
+
+function spawnSparkles(container) {
+  // Joy sparkles after save
+  const sparks = ['✨','⭐','🌟','💫','🌠'];
+  for (let i = 0; i < 12; i++) {
+    const el = document.createElement('div');
+    el.className = 'sparkle';
+    el.textContent = sparks[Math.floor(Math.random()*sparks.length)];
+    el.style.cssText = `left:${20+Math.random()*60}%;bottom:${20+Math.random()*40}%;--sd:${1.5+Math.random()*2}s;--sdl:${Math.random()*0.5}s;--ss:${10+Math.random()*10}px`;
+    el.style.position = 'fixed';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 4000);
+  }
+}
+
+/* ============================================================
+   MODULE: CHARACTER REACTION
+   ============================================================ */
+function triggerCharacterReaction(mood) {
+  const btn = document.querySelector(`.char-btn[data-mood="${mood}"]`);
+  if (!btn) return;
+  btn.classList.add('reacting', mood);
+  setTimeout(() => btn.classList.remove('reacting', mood), 800);
+}
+
+/* ============================================================
+   MODULE: WORD COUNT
+   ============================================================ */
+function updateWordCount() {
+  const text = document.getElementById('journalText').value.trim();
+  const words = text ? text.split(/\s+/).length : 0;
+  const wc = document.getElementById('wordCount');
+  wc.textContent = `${words} word${words !== 1 ? 's' : ''}`;
+  wc.style.color = words > 50 ? 'rgba(var(--mood-rgb),0.5)' : 'rgba(255,255,255,0.2)';
+}
+
+/* ============================================================
+   MODULE: SAVE ENTRY
+   ============================================================ */
+function saveEntry() {
+  const text = document.getElementById('journalText').value.trim();
+  if (!text)          { showToast('📝 Write something first!'); return; }
+  if (!state.currentMood) { showToast('🌈 Select a mood first!'); return; }
+
+  const entry = {
+    id: Date.now(),
+    mood: state.currentMood,
+    text,
+    timestamp: new Date().toISOString()
+  };
+  state.entries.unshift(entry);
+  persistEntries();
+  renderAll();
+
+  // Char reaction
+  triggerCharacterReaction(state.currentMood);
+
+  // Joy gets sparkles
+  if (state.currentMood === 'joy') spawnSparkles();
+
+  document.getElementById('journalText').value = '';
+  updateWordCount();
+
+  const m = MOODS[state.currentMood];
+
+  // Show support card for negative moods, closing toast for positive
+  if (m.negative) {
+    setTimeout(() => openSupportCard(state.currentMood), 600);
+  } else {
+    showToast(m.emoji + ' Entry saved! Keep shining ✨');
+  }
+}
+
+function clearEntry() {
+  document.getElementById('journalText').value = '';
+  updateWordCount();
+  document.getElementById('journalText').focus();
+}
+
+/* ============================================================
+   MODULE: SUPPORT CARD
+   ============================================================ */
+function openSupportCard(mood) {
+  const m = MOODS[mood];
+  document.getElementById('supportEmoji').textContent = m.supportEmoji;
+  document.getElementById('supportTitle').textContent = m.supportTitle;
+
+  const quotes = m.supportQuotes;
+  document.getElementById('supportQuote').textContent = quotes[Math.floor(Math.random()*quotes.length)];
+
+  const tipsEl = document.getElementById('supportTips');
+  tipsEl.innerHTML = m.tips.map((t, i) =>
+    `<div class="support-tip" style="animation-delay:${i*0.1}s">
+       <span class="tip-icon">${t.icon}</span>
+       <span>${t.text}</span>
+     </div>`
+  ).join('');
+
+  // Mood color on card
+  document.documentElement.style.setProperty('--mood-color', m.color);
+  document.documentElement.style.setProperty('--mood-rgb', m.rgb);
+
+  document.getElementById('supportOverlay').classList.add('open');
+}
+
+function closeSupportCard() {
+  document.getElementById('supportOverlay').classList.remove('open');
+  showToast('💙 Entry saved. You did great sharing that.');
+}
+
+/* ============================================================
+   MODULE: GRATITUDE
+   ============================================================ */
+function openGratitude() {
+  closeSupportCard();
+  document.getElementById('gratitudeOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('gratitudeText').focus(), 300);
+}
+
+function closeGratitude() {
+  document.getElementById('gratitudeOverlay').classList.remove('open');
+  showToast('💙 Take care of yourself today.');
+}
+
+function saveGratitude() {
+  const text = document.getElementById('gratitudeText').value.trim();
+  if (!text) { showToast('🌻 Write even one small thing!'); return; }
+
+  const g = { id: Date.now(), text, timestamp: new Date().toISOString() };
+  state.gratitudes.unshift(g);
+  localStorage.setItem('ms-gratitudes', JSON.stringify(state.gratitudes));
+  document.getElementById('gratitudeText').value = '';
+  document.getElementById('gratitudeOverlay').classList.remove('open');
+  renderAll();
+  showToast('🌟 Gratitude spark saved! Every light counts.');
+}
+
+function showGratitudeQuick() {
+  closeCheer();
+  document.getElementById('gratitudeOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('gratitudeText').focus(), 300);
+}
+
+/* ============================================================
+   MODULE: CHEER UP
+   ============================================================ */
+function openCheer() {
+  document.getElementById('cheerOverlay').classList.add('open');
+}
+function closeCheer() {
+  document.getElementById('cheerOverlay').classList.remove('open');
+}
+
+function playCalm() {
+  window.open('https://www.youtube.com/results?search_query=calming+ambient+music', '_blank');
+  closeCheer();
+}
+
+function selfCareReminder(type) {
+  const msgs = {
+    walk:    '🚶 Time to walk! Even 5 minutes outside changes everything.',
+    water:   '💧 Go drink a glass of water right now. Your brain will thank you!',
+    stretch: '🧘 Stand up, reach your arms high, and take 3 deep breaths. You\'ve got this!'
+  };
+  closeCheer();
+  showToast(msgs[type]);
+}
+
+/* ============================================================
+   MODULE: BREATHING EXERCISE
+   ============================================================ */
+let breathTimer = null;
+let breathPhase = 0;
+const breathPhases = [
+  { label:'Breathe In…',  dur:4000 },
+  { label:'Hold…',        dur:4000 },
+  { label:'Breathe Out…', dur:4000 },
+  { label:'Hold…',        dur:4000 }
+];
+
+function startBreathing() {
+  closeCheer();
+  document.getElementById('breathingModal').classList.add('open');
+  breathPhase = 0;
+  runBreathPhase();
+}
+
+function runBreathPhase() {
+  const phase = breathPhases[breathPhase % breathPhases.length];
+  document.getElementById('breathInstruction').textContent = phase.label;
+  document.getElementById('breathCircle').textContent = phase.label.replace('…','');
+  breathTimer = setTimeout(() => {
+    breathPhase++;
+    runBreathPhase();
+  }, phase.dur);
+}
+
+function stopBreathing() {
+  clearTimeout(breathTimer);
+  breathPhase = 0;
+  document.getElementById('breathingModal').classList.remove('open');
+  showToast('🫁 Good breathing session! Feel a little better?');
+}
+
+/* ============================================================
+   MODULE: RENDER ALL
+   ============================================================ */
+function renderAll() {
+  renderStats();
+  renderTimeline();
+  renderGratitudes();
+  renderEntries();
+}
+
+function renderStats() {
+  const row = document.getElementById('statsRow');
+  if (state.entries.length === 0 && state.gratitudes.length === 0) {
+    row.innerHTML = '';
+    return;
+  }
+  const counts = {};
+  state.entries.forEach(e => { counts[e.mood] = (counts[e.mood] || 0) + 1; });
+  row.innerHTML =
+    Object.entries(counts).map(([m, c]) => {
+      const mo = MOODS[m];
+      return `<div class="stat-chip mood-chip" style="--sc:${mo.color};--scr:${mo.rgb}">${mo.emoji} ${mo.label}: ${c}</div>`;
+    }).join('') +
+    `<div class="stat-chip">📔 ${state.entries.length} ${state.entries.length === 1 ? 'entry' : 'entries'}</div>` +
+    (state.gratitudes.length ? `<div class="stat-chip">🌻 ${state.gratitudes.length} gratitude${state.gratitudes.length > 1 ? 's' : ''}</div>` : '');
+}
+
+/* ============================================================
+   MODULE: MOOD TIMELINE
+   ============================================================ */
+function renderTimeline() {
+  const section = document.getElementById('timelineSection');
+  if (state.entries.length === 0) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+
+  // Track — last 30 entries
+  const recent = state.entries.slice(0, 30).reverse();
+  const track = document.getElementById('timelineTrack');
+  track.innerHTML = recent.map(e => {
+    const m = MOODS[e.mood];
+    const d = new Date(e.timestamp);
+    const label = `${m.label} · ${d.toLocaleDateString('en-US',{month:'short',day:'numeric'})}`;
+    return `<div class="timeline-seg" style="background:${m.color}33;--flex:1" data-tooltip="${label}" title="${label}">${m.emoji}</div>`;
+  }).join('');
+
+  // Legend
+  const counts = {};
+  state.entries.forEach(e => { counts[e.mood] = (counts[e.mood] || 0) + 1; });
+  document.getElementById('timelineLegend').innerHTML = Object.entries(counts).map(([m, c]) => {
+    const mo = MOODS[m];
+    return `<div class="legend-item"><div class="legend-dot" style="background:${mo.color}"></div>${mo.emoji} ${mo.label} (${c})</div>`;
+  }).join('');
+
+  // Calendar — last 20 entries as dots
+  const cal = document.getElementById('moodCalendar');
+  cal.innerHTML = state.entries.slice(0, 20).map(e => {
+    const m = MOODS[e.mood];
+    const d = new Date(e.timestamp);
+    return `<div class="cal-day" style="background:${m.color}22;border-color:${m.color}44" title="${m.label} · ${d.toLocaleDateString()}">${m.emoji}</div>`;
+  }).join('');
+}
+
+/* ============================================================
+   MODULE: RENDER ENTRIES
+   ============================================================ */
+function renderGratitudes() {
+  const section = document.getElementById('gratitudeSection');
+  const list = document.getElementById('gratitudeList');
+  if (state.gratitudes.length === 0) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+  list.innerHTML = state.gratitudes.map((g, i) => {
+    const d = new Date(g.timestamp);
+    const t = d.toLocaleDateString('en-US',{month:'short',day:'numeric'}) + ' · ' + d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+    return `<div class="entry-card gratitude-entry" style="animation-delay:${i*0.05}s">
+      <div class="entry-emoji">🌻</div>
+      <div class="entry-body">
+        <div class="entry-meta">
+          <span class="entry-mood-tag" style="--ec:#FFD700;--er:255,215,0">Gratitude Spark</span>
+          <span class="entry-time">${t}</span>
+        </div>
+        <div class="entry-text">${escHtml(g.text)}</div>
+      </div>
+      <button class="entry-delete" onclick="deleteGratitude(${g.id})" title="Delete">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function renderEntries() {
+  const section = document.getElementById('entriesSection');
+  const list = document.getElementById('entriesList');
+  if (state.entries.length === 0) {
+    section.style.display = 'none';
+    list.innerHTML = '';
+    return;
+  }
+  section.style.display = 'block';
+  list.innerHTML = state.entries.map((e, i) => {
+    const m = MOODS[e.mood];
+    const d = new Date(e.timestamp);
+    const t = d.toLocaleDateString('en-US',{month:'short',day:'numeric'}) + ' · ' + d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+    const preview = e.text.length > 200 ? e.text.slice(0, 200) + '…' : e.text;
+    return `<div class="entry-card" style="--ec:${m.color};--er:${m.rgb};animation-delay:${i*0.04}s">
+      <div class="entry-emoji">${m.emoji}</div>
+      <div class="entry-body">
+        <div class="entry-meta">
+          <span class="entry-mood-tag">${m.label}</span>
+          <span class="entry-time">${t}</span>
+        </div>
+        <div class="entry-text">${escHtml(preview)}</div>
+      </div>
+      <button class="entry-delete" onclick="deleteEntry(${e.id})" title="Delete">✕</button>
+    </div>`;
+  }).join('');
+}
+
+/* ============================================================
+   MODULE: DELETE & PERSIST
+   ============================================================ */
+function deleteEntry(id) {
+  state.entries = state.entries.filter(e => e.id !== id);
+  persistEntries();
+  renderAll();
+  showToast('🗑️ Entry removed');
+}
+
+function deleteGratitude(id) {
+  state.gratitudes = state.gratitudes.filter(g => g.id !== id);
+  localStorage.setItem('ms-gratitudes', JSON.stringify(state.gratitudes));
+  renderAll();
+  showToast('🗑️ Gratitude removed');
+}
+
+function persistEntries() {
+  localStorage.setItem('ms-entries', JSON.stringify(state.entries));
+}
+
+/* ============================================================
+   MODULE: TOAST
+   ============================================================ */
+let toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+/* ============================================================
+   MODULE: HELPERS
+   ============================================================ */
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* Close overlays on backdrop click */
+['supportOverlay','gratitudeOverlay','cheerOverlay'].forEach(id => {
+  document.getElementById(id).addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('open');
+  });
+});
+document.getElementById('breathingModal').addEventListener('click', function(e) {
+  if (e.target === this) stopBreathing();
+});
+
+/* Keyboard: ESC closes modals */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    ['supportOverlay','gratitudeOverlay','cheerOverlay'].forEach(id =>
+      document.getElementById(id).classList.remove('open')
+    );
+    stopBreathing();
+  }
+});
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+init();
+</script>
+</body>
+</html>
