@@ -20,4 +20,4 @@ The goal of MindSpace is to create a minimal and accessible platform where users
 
 You can view the live version of the project here:
 
-🔗 [MindSpace Emotional Companion](https://github.com/Anshika-Gupta9/mindspace-emotional-companion/settings/pages)
+🔗 [MindSpace Emotional Companion](https://anshika-gupta9.github.io/mindspace-emotional-companion/)
