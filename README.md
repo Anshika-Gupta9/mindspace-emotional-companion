@@ -14,7 +14,7 @@ MindSpace is a simple mood-based journaling web application designed to help use
 - JavaScript
 
 ## 🎯 Purpose
-The goal of MindSpace is to create a minimal and accessible platform where users can track their emotions and write journal entries in a a comfortable digital environment. It explores how simple web applications can support emotional reflection and personal well-being.
+The goal of MindSpace is to create a minimal and accessible platform where users can track their emotions and write journal entries in a comfortable digital environment. It explores how simple web applications can support emotional reflection and personal well-being.
 
 ## 🌐 Live Demo
 
